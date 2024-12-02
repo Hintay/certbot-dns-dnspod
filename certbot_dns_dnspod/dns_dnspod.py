@@ -55,22 +55,28 @@ class Authenticator(dns_common.DNSAuthenticator):
     def _get_dnspod_client(self):
         return _DNSPodLexiconClient(self.credentials.conf('api-id'),
                                     self.credentials.conf('api-token'),
-                                    self.ttl)
+                                    self.ttl,
+                                    self.credentials.conf('api-endpoint'))
 
+class _DNSPodProvider(dnspod.Provider):
+    def __init__(self, config, endpoint=None):
+        super(_DNSPodProvider, self).__init__(config)
+        if endpoint:
+            self.api_endpoint = endpoint
 
 class _DNSPodLexiconClient(dns_common_lexicon.LexiconClient):
     """
     Encapsulates all communication with the DNSPod via Lexicon.
     """
 
-    def __init__(self, api_id, api_token, ttl):
+    def __init__(self, api_id, api_token, ttl, endpoint=None):
         super(_DNSPodLexiconClient, self).__init__()
 
-        self.provider = dnspod.Provider({
+        self.provider = _DNSPodProvider({
             'auth_username': api_id,
             'auth_token': api_token,
             'ttl': ttl,
-        })
+        }, endpoint)
 
     def _find_domain_id(self, domain):
         """
